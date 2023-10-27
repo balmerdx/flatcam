@@ -905,7 +905,7 @@ class FlatCAMExcellon(FlatCAMObj, Excellon):
         for exc in flattened_list:
             # copy options of the current excellon obj to the final excellon obj
             for option in exc.options:
-                if option is not 'name':
+                if option != 'name':
                     try:
                         exc_final.options[option] = exc.options[option]
                     except:

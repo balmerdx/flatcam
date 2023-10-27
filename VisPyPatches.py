@@ -21,8 +21,8 @@ def apply_patches():
     }
     """
 
-    markers._marker_dict['++'] = cross_lines
-    markers.marker_types = tuple(sorted(list(markers._marker_dict.copy().keys())))
+    #[balmer] markers._marker_dict['++'] = cross_lines
+    #[balmer] markers.marker_types = tuple(sorted(list(markers._marker_dict.copy().keys())))
 
     # # Add clear_data method to LineVisual to have possibility of clearing data
     # def clear_data(self):

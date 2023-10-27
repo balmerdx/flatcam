@@ -1,5 +1,41 @@
 FlatCAM: 2D Computer-Aided PCB Manufacturing
 =================================================
+27.10.2023
+Started with this package versions:
+absl-py           2.0.0
+affine            2.4.0
+attrs             23.1.0
+certifi           2023.7.22
+click             8.1.7
+click-plugins     1.1.1
+cligj             0.7.2
+ezdxf             1.1.0
+fonttools         4.43.1
+freetype-py       2.4.0
+hsluv             5.0.4
+kiwisolver        1.4.5
+lxml              4.9.3
+numpy             1.26.0
+ortools           9.7.2996
+packaging         23.2
+pip               22.0.2
+protobuf          4.24.4
+PyOpenGL          3.1.7
+pyparsing         3.1.1
+PyQt5             5.15.9
+PyQt5-Qt5         5.15.2
+PyQt5-sip         12.12.2
+rasterio          1.3.8
+Rtree             1.0.1
+setuptools        59.6.0
+Shapely           1.7.1
+simplejson        3.19.2
+snuggs            1.4.7
+svg.path          6.3
+typing_extensions 4.8.0
+vispy             0.14.1
+
+=================================================
 
 (c) 2014-2018 Juan Pablo Caram
 

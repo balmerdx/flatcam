@@ -32,7 +32,7 @@ from shapely.wkt import dumps as sdumps
 from shapely.geometry.base import BaseGeometry
 from shapely.geometry import shape
 
-from collections import Iterable
+#[balmer] from collections import Iterable
 
 import numpy as np
 import rasterio
@@ -2363,7 +2363,7 @@ class Gerber (Geometry):
                     # so it can be processed by FlatCAM.
                     # But first test to see if the aperture type is "aperture macro". In that case
                     # we should not test for "size" key as it does not exist in this case.
-                    if self.apertures[current_aperture]["type"] is not "AM":
+                    if self.apertures[current_aperture]["type"] != "AM":
                         if self.apertures[current_aperture]["size"] == 0:
                             self.apertures[current_aperture]["size"] = 1e-12
                     log.debug(self.apertures[current_aperture])
@@ -4021,7 +4021,7 @@ class Excellon(Geometry):
         try:
             for drill in self.drills:
                 # poly = drill['point'].buffer(self.tools[drill['tool']]["C"]/2.0)
-                if drill['tool'] is '':
+                if drill['tool'] == '':
                     self.app.inform.emit("[warning] Excellon.create_geometry() -> a drill location was skipped "
                                          "due of not having a tool associated.\n"
                                          "Check the resulting GCode.")
@@ -4565,7 +4565,10 @@ class CNCjob(Geometry):
                             y2 = locations[to_node][1]
                             self.matrix[from_node][to_node] = distance_euclidian(x1, y1, x2, y2)
 
-            def Distance(self, from_node, to_node):
+            def Distance(self, from_index, to_index):
+                #[balmer] https://github.com/google/or-tools/issues/1177 (add IndexToNode)
+                from_node = manager.IndexToNode(from_index)
+                to_node = manager.IndexToNode(to_index)
                 return int(self.matrix[from_node][to_node])
 
         # Create the data.
@@ -4677,14 +4680,18 @@ class CNCjob(Geometry):
 
                     # Create routing model.
                     if tsp_size > 0:
-                        routing = pywrapcp.RoutingModel(tsp_size, num_routes, depot)
-                        search_parameters = pywrapcp.RoutingModel.DefaultSearchParameters()
+                        manager = pywrapcp.RoutingIndexManager(tsp_size, num_routes, depot)
+                        routing = pywrapcp.RoutingModel(manager)
+                        search_parameters = pywrapcp.DefaultRoutingSearchParameters()
+                        #[balmer] routing = pywrapcp.RoutingModel(tsp_size, num_routes, depot)
+                        #[balmer] search_parameters = pywrapcp.RoutingModel.DefaultSearchParameters()
 
                         # Callback to the distance function. The callback takes two
                         # arguments (the from and to node indices) and returns the distance between them.
                         dist_between_locations = CreateDistanceCallback()
                         dist_callback = dist_between_locations.Distance
-                        routing.SetArcCostEvaluatorOfAllVehicles(dist_callback)
+                        routing.SetArcCostEvaluatorOfAllVehicles(routing.RegisterTransitCallback(dist_callback))
+                        #[balmer] routing.SetArcCostEvaluatorOfAllVehicles(dist_callback)
 
                         # Solve, returns a solution if any.
                         assignment = routing.SolveWithParameters(search_parameters)
