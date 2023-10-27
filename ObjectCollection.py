@@ -381,7 +381,8 @@ class ObjectCollection(QtCore.QAbstractItemModel):
             return
 
     def on_mouse_down(self, event):
-        FlatCAMApp.App.log.debug("Mouse button pressed on list")
+        #FlatCAMApp.App.log.debug("Mouse button pressed on list")
+        pass
 
     def on_menu_request(self, pos):
 
@@ -562,7 +563,7 @@ class ObjectCollection(QtCore.QAbstractItemModel):
         self.endInsertRows()
 
         # Expand group
-        if group.child_count() is 1:
+        if group.child_count() == 1:
             self.view.setExpanded(group_index, True)
 
     def get_names(self):

@@ -82,7 +82,7 @@ class manual_toolchange(FlatCAMPostProc):
             return """G00 Z{toolchangez}
 T{tool}
 M5
-G00 X{toolchangex}Y{toolchangey}    
+G00 X{toolchangex} Y{toolchangey}    
 (MSG, Change to Tool Dia = {toolC}, Total drills for current tool = {t_drills})
 M0
 G01 Z0
@@ -99,7 +99,7 @@ M0
             return """G00 Z{toolchangez}
 T{tool}
 M5
-G00 X{toolchangex}Y{toolchangey}    
+G00 X{toolchangex} Y{toolchangey}    
 (MSG, Change to Tool Dia = {toolC})
 M0
 G01 Z0
@@ -128,7 +128,7 @@ M0
     def end_code(self, p):
         coords_xy = p['toolchange_xy']
         gcode = ('G00 Z' + self.feedrate_format %(p.fr_decimals, p.endz) + "\n")
-        gcode += 'G00 X{x}Y{y}'.format(x=coords_xy[0], y=coords_xy[1]) + "\n"
+        gcode += 'G00 X{x} Y{y}'.format(x=coords_xy[0], y=coords_xy[1]) + "\n"
         return gcode
 
     def feedrate_code(self, p):

@@ -814,7 +814,7 @@ class FlatCAMGerber(FlatCAMObj, Gerber):
                             self.add_shape(shape=el, color=random_color() if self.options['multicolored'] else 'black',
                                            visible=self.options['plot'])
                     else:
-                        assert(0)
+                        assert False
 
             self.shapes.redraw()
         except (ObjectDeleted, AttributeError):
