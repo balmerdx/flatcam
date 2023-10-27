@@ -1,7 +1,9 @@
 FlatCAM: 2D Computer-Aided PCB Manufacturing
 =================================================
 27.10.2023
+
 Started with this package versions:
+
 absl-py           2.0.0
 affine            2.4.0
 attrs             23.1.0
@@ -28,7 +30,7 @@ PyQt5-sip         12.12.2
 rasterio          1.3.8
 Rtree             1.0.1
 setuptools        59.6.0
-Shapely           1.7.1
+Shapely           1.23.4
 simplejson        3.19.2
 snuggs            1.4.7
 svg.path          6.3

@@ -797,20 +797,25 @@ class FlatCAMGerber(FlatCAMObj, Gerber):
                         self.add_shape(shape=g, color=color,
                                        face_color=random_color() if self.options['multicolored']
                                        else face_color, visible=self.options['plot'])
-                    else:
-                        for el in g:
+                    elif type(g) == MultiPolygon:
+                        for el in g.geoms:
                             self.add_shape(shape=el, color=color,
                                            face_color=random_color() if self.options['multicolored']
                                            else face_color, visible=self.options['plot'])
+                    else:
+                        assert False
             else:
                 for g in geometry:
                     if type(g) == Polygon or type(g) == LineString:
                         self.add_shape(shape=g, color=random_color() if self.options['multicolored'] else 'black',
                                        visible=self.options['plot'])
-                    else:
-                        for el in g:
+                    elif type(g) == MultiPolygon:
+                        for el in g.geoms:
                             self.add_shape(shape=el, color=random_color() if self.options['multicolored'] else 'black',
                                            visible=self.options['plot'])
+                    else:
+                        assert(0)
+
             self.shapes.redraw()
         except (ObjectDeleted, AttributeError):
             self.shapes.clear(update=True)

@@ -1,8 +1,6 @@
 import sys
-#from PyQt5 import sip
-#import sip
 
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PyQt5 import QtWidgets
 from FlatCAMApp import App
 from multiprocessing import freeze_support
 import VisPyPatches
