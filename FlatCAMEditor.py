@@ -489,7 +489,7 @@ class DrawToolShape(object):
                     for i in o.interiors:
                         pts += DrawToolShape.get_pts(i)
                 elif type(o) == MultiLineString:
-                    for line in o:
+                    for line in o.geoms:
                         pts += DrawToolShape.get_pts(line)
                 ## Has .coords: list them.
                 else:
@@ -2131,7 +2131,7 @@ class FlatCAMGeoEditor(QtCore.QObject):
             self.delete_shape(target)
         elif type(target.geo) == MultiLineString:
             try:
-                for linestring in target.geo:
+                for linestring in target.geo.geoms:
                     self.add_shape(DrawToolShape(linestring.difference(toolgeo)))
             except:
                 self.app.log.warning("Current LinearString does not intersect the target")
@@ -2453,7 +2453,7 @@ class FlatCAMGeoEditor(QtCore.QObject):
                 # this case is for the Font Parse
                 for el in list(geo.geo):
                     if type(el) == MultiPolygon:
-                        for poly in el:
+                        for poly in el.geoms:
                             self.tool_shape.add(
                                 shape=poly,
                                 color=(self.app.defaults["global_draw_color"] + '80'),
@@ -2462,7 +2462,7 @@ class FlatCAMGeoEditor(QtCore.QObject):
                                 tolerance=None
                             )
                     elif type(el) == MultiLineString:
-                        for linestring in el:
+                        for linestring in el.geoms:
                             self.tool_shape.add(
                                 shape=linestring,
                                 color=(self.app.defaults["global_draw_color"] + '80'),
@@ -2722,7 +2722,7 @@ class FlatCAMGeoEditor(QtCore.QObject):
             geometry = self.active_tool.geometry
 
         try:
-            for geo in geometry:
+            for geo in geometry.geoms:
                 plot_elements += self.plot_shape(geometry=geo, color=color, linewidth=linewidth)
 
         ## Non-iterable
@@ -3028,7 +3028,7 @@ class FlatCAMGeoEditor(QtCore.QObject):
             self.replot()
             return
         if type(results) == MultiPolygon:
-            for poly in results:
+            for poly in results.geoms:
                 self.add_shape(DrawToolShape(poly.exterior))
         else:
             self.add_shape(DrawToolShape(results.exterior))
@@ -3099,7 +3099,7 @@ class FlatCAMGeoEditor(QtCore.QObject):
             self.replot()
             return
         if type(results) == MultiPolygon:
-            for poly in results:
+            for poly in results.geoms:
                 self.add_shape(DrawToolShape(poly.exterior))
         else:
             self.add_shape(DrawToolShape(results.exterior))
@@ -4816,7 +4816,7 @@ class FlatCAMExcEditor(QtCore.QObject):
                 # this case is for the Font Parse
                 for el in list(geo.geo):
                     if type(el) == MultiPolygon:
-                        for poly in el:
+                        for poly in el.geoms:
                             self.tool_shape.add(
                                 shape=poly,
                                 color=(self.app.defaults["global_draw_color"] + '80'),
@@ -4825,7 +4825,7 @@ class FlatCAMExcEditor(QtCore.QObject):
                                 tolerance=None
                             )
                     elif type(el) == MultiLineString:
-                        for linestring in el:
+                        for linestring in el.geoms:
                             self.tool_shape.add(
                                 shape=linestring,
                                 color=(self.app.defaults["global_draw_color"] + '80'),
@@ -4906,7 +4906,7 @@ class FlatCAMExcEditor(QtCore.QObject):
             geometry = self.active_tool.geometry
 
         try:
-            for geo in geometry:
+            for geo in geometry.geoms:
                 plot_elements += self.plot_shape(geometry=geo, color=color, linewidth=linewidth)
 
         ## Non-iterable

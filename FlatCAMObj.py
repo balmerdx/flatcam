@@ -610,9 +610,10 @@ class FlatCAMGerber(FlatCAMObj, Gerber):
                 try:
                     if type(geom) is MultiPolygon:
                         pl = []
-                        for p in geom:
+                        for p in geom.geoms:
                             pl.append(Polygon(p.exterior.coords[::-1], p.interiors))
-                        geom = MultiPolygon(pl)
+                        #geom = MultiPolygon(pl)
+                        geom = pl
                     elif type(geom) is Polygon:
                         geom = Polygon(geom.exterior.coords[::-1], geom.interiors)
                     else:
@@ -1773,7 +1774,7 @@ class FlatCAMGeometry(FlatCAMObj, Geometry):
         except TypeError:
             if o is not None:
                 if type(o) == MultiPolygon:
-                    for poly in o:
+                    for poly in o.geoms:
                         pts += FlatCAMGeometry.get_pts(poly)
                 ## Descend into .exerior and .interiors
                 elif type(o) == Polygon:
@@ -1781,7 +1782,7 @@ class FlatCAMGeometry(FlatCAMObj, Geometry):
                     for i in o.interiors:
                         pts += FlatCAMGeometry.get_pts(i)
                 elif type(o) == MultiLineString:
-                    for line in o:
+                    for line in o.geoms:
                         pts += FlatCAMGeometry.get_pts(line)
                 ## Has .coords: list them.
                 else:
@@ -2746,7 +2747,7 @@ class FlatCAMGeometry(FlatCAMObj, Geometry):
 
             def g2dxf(dxf_space, geo):
                 if isinstance(geo, MultiPolygon):
-                    for poly in geo:
+                    for poly in geo.geoms:
                         ext_points = list(poly.exterior.coords)
                         dxf_space.add_lwpolyline(ext_points)
                         for interior in poly.interiors:
@@ -2757,7 +2758,7 @@ class FlatCAMGeometry(FlatCAMObj, Geometry):
                     for interior in geo.interiors:
                         dxf_space.add_lwpolyline(list(interior.coords))
                 if isinstance(geo, MultiLineString):
-                    for line in geo:
+                    for line in geo.geoms:
                         dxf_space.add_lwpolyline(list(line.coords))
                 if isinstance(geo, LineString) or isinstance(geo, LinearRing):
                     dxf_space.add_lwpolyline(list(geo.coords))

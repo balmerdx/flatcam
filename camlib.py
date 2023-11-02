@@ -352,15 +352,13 @@ class Geometry(object):
         if geometry is None:
             geometry = self.solid_geometry
 
-        ## If iterable, expand recursively.
-        try:
-            for geo in geometry:
+        if type(geometry) == Polygon:
+            interiors.extend(geometry.interiors)
+        elif type(geometry) == MultiPolygon:
+            for geo in geometry.geoms:
                 interiors.extend(self.get_interiors(geometry=geo))
-
-        ## Not iterable, get the interiors if polygon.
-        except TypeError:
-            if type(geometry) == Polygon:
-                interiors.extend(geometry.interiors)
+        else:
+            raise Exception("Not a Polygon or MultiPolygon")
 
         return interiors
 
@@ -379,15 +377,13 @@ class Geometry(object):
         if geometry is None:
             geometry = self.solid_geometry
 
-        ## If iterable, expand recursively.
-        try:
-            for geo in geometry:
+        if type(geometry) == Polygon:
+            exteriors.append(geometry.exterior)
+        elif type(geometry) == MultiPolygon:
+            for geo in geometry.geoms:
                 exteriors.extend(self.get_exteriors(geometry=geo))
-
-        ## Not iterable, get the exterior if polygon.
-        except TypeError:
-            if type(geometry) == Polygon:
-                exteriors.append(geometry.exterior)
+        else:
+            raise Exception("Not a Polygon or MultiPolygon")
 
         return exteriors
 
@@ -410,22 +406,26 @@ class Geometry(object):
             self.flat_geometry = []
 
         ## If iterable, expand recursively.
-        try:
+        if type(geometry) == list:
             for geo in geometry:
                 if geo is not None:
                     self.flatten(geometry=geo,
                                  reset=False,
                                  pathonly=pathonly)
-
-        ## Not iterable, do the actual indexing and add.
-        except TypeError:
-            if pathonly and type(geometry) == Polygon:
-                self.flat_geometry.append(geometry.exterior)
-                self.flatten(geometry=geometry.interiors,
-                             reset=False,
-                             pathonly=True)
-            else:
-                self.flat_geometry.append(geometry)
+        elif type(geometry) == MultiPolygon:
+            for geo in geometry.geoms:
+                if geo is not None:
+                    self.flatten(geometry=geo,
+                                 reset=False,
+                                 pathonly=pathonly)
+        elif pathonly and type(geometry) == Polygon:
+            self.flat_geometry.append(geometry.exterior)
+            for inner in geometry.interiors:
+                self.flatten(geometry=inner,
+                                reset=False,
+                                pathonly=True)
+        else:
+            self.flat_geometry.append(geometry)
 
         return self.flat_geometry
 
@@ -798,14 +798,14 @@ class Geometry(object):
             return None
 
         # current can be a MultiPolygon
-        try:
-            for p in current:
+        if type(current) == MultiPolygon:
+            for p in current.geoms:
                 geoms.insert(p.exterior)
                 for i in p.interiors:
                     geoms.insert(i)
 
-        # Not a Multipolygon. Must be a Polygon
-        except TypeError:
+        else:
+            assert type(current) == Polygon
             geoms.insert(current.exterior)
             for i in current.interiors:
                 geoms.insert(i)
@@ -817,14 +817,13 @@ class Geometry(object):
             if current.area > 0:
 
                 # current can be a MultiPolygon
-                try:
-                    for p in current:
+                if type(current) == MultiPolygon:
+                    for p in current.geoms:
                         geoms.insert(p.exterior)
                         for i in p.interiors:
                             geoms.insert(i)
-
-                # Not a Multipolygon. Must be a Polygon
-                except TypeError:
+                else:
+                    assert type(current) == Polygon
                     geoms.insert(current.exterior)
                     for i in current.interiors:
                         geoms.insert(i)
@@ -4683,15 +4682,12 @@ class CNCjob(Geometry):
                         manager = pywrapcp.RoutingIndexManager(tsp_size, num_routes, depot)
                         routing = pywrapcp.RoutingModel(manager)
                         search_parameters = pywrapcp.DefaultRoutingSearchParameters()
-                        #[balmer] routing = pywrapcp.RoutingModel(tsp_size, num_routes, depot)
-                        #[balmer] search_parameters = pywrapcp.RoutingModel.DefaultSearchParameters()
 
                         # Callback to the distance function. The callback takes two
                         # arguments (the from and to node indices) and returns the distance between them.
                         dist_between_locations = CreateDistanceCallback()
                         dist_callback = dist_between_locations.Distance
                         routing.SetArcCostEvaluatorOfAllVehicles(routing.RegisterTransitCallback(dist_callback))
-                        #[balmer] routing.SetArcCostEvaluatorOfAllVehicles(dist_callback)
 
                         # Solve, returns a solution if any.
                         assignment = routing.SolveWithParameters(search_parameters)
@@ -5038,7 +5034,9 @@ class CNCjob(Geometry):
         ## Index first and last points in paths
         # What points to index.
         def get_pts(o):
-            return [o.coords[0], o.coords[-1]]
+            #return [o.coords[0], o.coords[-1]]
+            #[balmer]
+            return [o.xy[0], o.xy[-1]]
 
         # Create the indexed storage.
         storage = FlatCAMRTreeStorage()

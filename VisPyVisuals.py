@@ -428,6 +428,9 @@ class TextGroup(object):
         Visibility of group
         :param value: bool
         """
+        if self._index is None:#[balmer]
+            return
+            
         self._visible = value
         self._collection.data[self._index]['visible'] = value
 
