@@ -4942,6 +4942,51 @@ class CNCjob(Geometry):
         self.gcode += self.doformat(p.end_code, x=0, y=0)
 
         return self.gcode
+    
+    @staticmethod
+    def sort_by_travel_distance(flat_geometry):
+        points = []
+        for geom in flat_geometry:
+            points.append((geom.xy[0][0], geom.xy[1][0]))
+            #print(f'{geom.xy[0][0]}, {geom.xy[1][0]}')
+        print(points)
+        if len(points) < 2:
+            return flat_geometry
+        
+
+        def distance_callback(from_index, to_index):
+            """Returns the distance between the two nodes."""
+            # Convert from routing variable Index to distance matrix NodeIndex.
+            from_node = manager.IndexToNode(from_index)
+            to_node = manager.IndexToNode(to_index)
+            f = points[from_node]
+            t = points[to_node]
+            return int(distance(f, t))
+        
+        num_routes = 1
+        depot = 0
+        manager = pywrapcp.RoutingIndexManager(len(points), num_routes, depot)
+        routing = pywrapcp.RoutingModel(manager)
+        search_parameters = pywrapcp.DefaultRoutingSearchParameters()
+        #search_parameters.local_search_metaheuristic = (routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH)
+        transit_callback_index = routing.RegisterTransitCallback(distance_callback)
+        routing.SetArcCostEvaluatorOfAllVehicles(transit_callback_index)
+        solution = routing.SolveWithParameters(search_parameters)
+        if not solution:
+            return flat_geometry
+        sorted_geometry = []
+        route_number = 0
+        index = routing.Start(route_number)
+
+        node_list = []
+        while not routing.IsEnd(index):
+            node = manager.IndexToNode(index)
+            node_list.append(node)
+            sorted_geometry.append(flat_geometry[node])
+            index = solution.Value(routing.NextVar(index))
+        print(node_list)
+
+        return sorted_geometry
 
     def generate_from_geometry_2(self, geometry, append=True,
                                  tooldia=None, offset=0.0, tolerance=0,
@@ -4996,6 +5041,7 @@ class CNCjob(Geometry):
         ## Flatten the geometry. Only linear elements (no polygons) remain.
         flat_geometry = self.flatten(temp_solid_geometry, pathonly=True)
         log.debug("%d paths" % len(flat_geometry))
+        flat_geometry = self.sort_by_travel_distance(flat_geometry)
 
         self.tooldia = tooldia
         self.z_cut = z_cut
@@ -5031,23 +5077,8 @@ class CNCjob(Geometry):
             self.app.inform.emit("[warning] The Cut Z parameter is zero. "
                                  "There will be no cut, skipping %s file" % geometry.options['name'])
 
-        ## Index first and last points in paths
-        # What points to index.
-        def get_pts(o):
-            #return [o.coords[0], o.coords[-1]]
-            #[balmer]
-            return [o.xy[0], o.xy[-1]]
-
-        # Create the indexed storage.
-        storage = FlatCAMRTreeStorage()
-        storage.get_points = get_pts
-
         # Store the geometry
         log.debug("Indexing geometry before generating G-Code...")
-        for shape in flat_geometry:
-            if shape is not None:  # TODO: This shouldn't have happened.
-                storage.insert(shape)
-
         # self.input_geometry_bounds = geometry.bounds()
 
         if not append:
@@ -5084,33 +5115,19 @@ class CNCjob(Geometry):
         log.debug("Starting G-Code...")
         path_count = 0
         current_pt = (0, 0)
-        pt, geo = storage.nearest(current_pt)
-        try:
-            while True:
-                path_count += 1
+        for geo in flat_geometry:
+            path_count += 1
 
-                # Remove before modifying, otherwise deletion will fail.
-                storage.remove(geo)
+            #---------- Single depth/pass --------
+            if not multidepth:
+                self.gcode += self.create_gcode_single_pass(geo, extracut, tolerance)
 
-                # If last point in geometry is the nearest but prefer the first one if last point == first point
-                # then reverse coordinates.
-                if pt != geo.coords[0] and pt == geo.coords[-1]:
-                    geo.coords = list(geo.coords)[::-1]
+            #--------- Multi-pass ---------
+            else:
+                self.gcode += self.create_gcode_multi_pass(geo, extracut, tolerance,
+                                                            postproc=p, current_point=current_pt)
 
-                #---------- Single depth/pass --------
-                if not multidepth:
-                    self.gcode += self.create_gcode_single_pass(geo, extracut, tolerance)
-
-                #--------- Multi-pass ---------
-                else:
-                    self.gcode += self.create_gcode_multi_pass(geo, extracut, tolerance,
-                                                               postproc=p, current_point=current_pt)
-
-                current_pt = geo.coords[-1]
-                pt, geo = storage.nearest(current_pt) # Next
-
-        except StopIteration:  # Nothing found in storage.
-            pass
+            current_pt = geo.coords[-1]
 
         log.debug("Finishing G-Code... %s paths traced." % path_count)
 
